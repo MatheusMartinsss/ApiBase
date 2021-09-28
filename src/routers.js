@@ -13,7 +13,7 @@ routes.get('/products', ProductController.index);
 routes.delete('/products/:id', ProductController.delete)
 
 //user routers
-routes.post('/user/create', UsersController.store);
-routes.post('/users/login', UsersController.auth);
+routes.post('/user/register', UsersController.store);
+routes.post('/user/login', UsersController.auth);
 
 module.exports = routes;
