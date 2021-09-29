@@ -9,13 +9,15 @@ module.exports = {
         
         const product = await Produtos.create({  //Cria o novo produto na base de dados.
             name, 
+
             description, 
+
             price 
         });
 
         return res.json(product);
     },
-    
+
     async index (req, res){
 
         const products = await Produtos.findAll(); // Encontra todos produtos!
@@ -32,6 +34,7 @@ module.exports = {
         if(!id)return res.send({message: 'Precisa de um id para deletar um produto!.'})// Verifica se o ID no body da requisição está vazio
 
         await Produtos.destroy({
+            
             where: {id}
         })
         return res.send({message: 'Produto id ' + id +'Deletado com sucesso'})

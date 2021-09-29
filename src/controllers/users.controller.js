@@ -1,4 +1,5 @@
 const Users = require('../models/users.model.js')
+const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 
 module.exports = {
@@ -7,15 +8,15 @@ module.exports = {
 
         if(!(name || email || password)) return res.status(400).send({error: 'Nenhum campo pode está vazio!'})// verifica se nenhum campo está vazio.
 
-        const user = await Users.findOne({where: {email}}) // Procura um usuario com o email que está cadastrado.
+        const userexist = await Users.findOne({where: {email}}) // Procura um usuario com o email que está cadastrado.
 
-        if(user)return res.status(400).send({error: 'Esse email já está cadastrado!.'}) // Verifica se o email passado no body da requisição já está cadastrado.
+        if(userexist)return res.status(400).send({error: 'Esse email já está cadastrado!.'}) // Verifica se o email passado no body da requisição já está cadastrado.
 
         const salt = await bcrypt.genSalt(10);
 
         const passwordformated = await bcrypt.hash(password, salt); //encripta a senha
 
-        await Users.create({
+        const user = await Users.create({
 
             name,
 
@@ -24,13 +25,19 @@ module.exports = {
             password: passwordformated,
         })
 
-        return res.send({message: "Usuario  criado com sucesso"});
+        const token = jwt.sign({user_id: user.id, user_name: user.name}, process.env.TOKEN_KEY, {expiresIn: "2h"}) // gera um token com validade de 2h
+
+        user.token = token; 
+
+        user.password = null;
+
+        return res.json({user: user, token: token})
     },
     async auth(req, res){
 
         const {email, password} = req.body;
 
-        if(!email || !password) return res.status(400).send({ error: 'Os campos não podem está vazio!.'})//Verifica se nenhum dos campos está nulo
+        if(!(email || password)) return res.status(400).send({ error: 'Os campos não podem está vazio!.'})//Verifica se nenhum dos campos está nulo
 
         const user = await Users.findOne({where: {email}});// busca um usuario com o email enviado no body a requisição.
 
@@ -38,9 +45,13 @@ module.exports = {
 
        const validatePassword = await bcrypt.compare(password, user.password); // Valida se a senha passada no body da requisição é igual a senha salva.
 
-        if(validatePassword){
+        if(validatePassword){ //caso a senha seja valida.
 
-            return res.status(200).json({message: 'Autenticado com sucesso!'})
+            user.password = null; // seta a senha do usuario para null para não ser enviada para o front-end
+
+            const token = jwt.sign({user_id: user.id, user_name: user.name}, process.env.TOKEN_KEY, {expiresIn: "2h"}) // gera um token de autenticação com validade de 2h
+
+            return res.json({user: user, token: token})
 
         }else {
 

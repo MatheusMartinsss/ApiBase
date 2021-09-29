@@ -1,16 +1,13 @@
 const express = require('express')
 const ProductController = require('./controllers/products.controllers')
 const UsersController = require('./controllers/users.controller')
+const Auth = require('./middlewares/auth')
 const routes = express.Router();
 
-routes.get('/', (req, res) =>{
-    return res.json({helloword: 'Olá, mundo'})
-})
-
 // product router
-routes.post('/product', ProductController.store);
+routes.post('/products/create', Auth.verifytoken, ProductController.store);
 routes.get('/products', ProductController.index);
-routes.delete('/products/:id', ProductController.delete)
+routes.delete('/products/delete/:id', ProductController.delete)
 
 //user routers
 routes.post('/user/register', UsersController.store);
