@@ -1,18 +1,19 @@
 const Users = require('../models/users.model.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const Op = require('Sequelize').Op
 
 module.exports = {
     async store(req, res) {
-        const { name, email, password} = req.body;
+        const { name, email, password, phonenumber, cpf } = req.body;
 
-        if(!(name || email || password)) return res.status(400).send({error: 'Nenhum campo pode está vazio!'})// verifica se nenhum campo está vazio.
+        if (!(name || email || password || phonenumber || cpf)) return res.status(400).send({ error: 'Nenhum campo pode está vazio!' })// verifica se nenhum campo está vazio.
 
-        const userexist = await Users.findOne({where: {email}}) // Procura um usuario com o email que está cadastrado.
+        const userexist = await Users.findOne({ where: { [Op.or]: [{email} , {cpf}] } }) // Procura um usuario com o email que está cadastrado.
 
-        if(userexist)return res.status(400).send({error: 'Esse email já está cadastrado!.'}) // Verifica se o email passado no body da requisição já está cadastrado.
+        if (userexist) return res.status(400).send({ error: 'Email ou cpf já existe na nossa base de dados!.' }) // Verifica se o email passado no body da requisição já está cadastrado.
 
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(process.env.SALT_ROUNDS);
 
         const passwordformated = await bcrypt.hash(password, salt); //encripta a senha
 
@@ -21,41 +22,43 @@ module.exports = {
             name,
 
             email,
-            
+
             password: passwordformated,
+
+            phonenumber,
+
+            cpf,
         })
 
-        const token = jwt.sign({user_id: user.id, user_name: user.name}, process.env.TOKEN_KEY, {expiresIn: "2h"}) // gera um token com validade de 2h
+        const token = jwt.sign({ user_id: user.id, user_name: user.name }, process.env.TOKEN_KEY, { expiresIn: "2h" }) // gera um token com validade de 2h
 
-        user.token = token; 
+        delete user.password; // remove a senha do usuario para não ser enviada para o front-end
 
-        user.password = null;
-
-        return res.json({user: user, token: token})
+        return res.json({ user: user, token: token })
     },
-    async auth(req, res){
+    async auth(req, res) {
 
-        const {email, password} = req.body;
+        const { email, password } = req.body;
 
-        if(!(email || password)) return res.status(400).send({ error: 'Os campos não podem está vazio!.'})//Verifica se nenhum dos campos está nulo
+        if (!(email || password)) return res.status(400).send({ error: 'Os campos não podem está vazio!.' })//Verifica se nenhum dos campos está nulo
 
-        const user = await Users.findOne({where: {email}});// busca um usuario com o email enviado no body a requisição.
+        const user = await Users.findOne({ where: { email } });// busca um usuario com o email enviado no body a requisição.
 
-        if(!user)return res.status(401).send({error: 'usuario não encontrado!.'})// Verifica se o usuario existe na base de dados.
+        if (!user) return res.status(401).send({ error: 'usuario não encontrado!.' })// Verifica se o usuario existe na base de dados.
 
-       const validatePassword = await bcrypt.compare(password, user.password); // Valida se a senha passada no body da requisição é igual a senha salva.
+        const validatePassword = await bcrypt.compare(password, user.password); // Valida se a senha passada no body da requisição é igual a senha salva.
 
-        if(validatePassword){ //caso a senha seja valida.
+        if (validatePassword) { //caso a senha seja valida.
 
-            user.password = null; // seta a senha do usuario para null para não ser enviada para o front-end
+            delete user.password; // remove a senha do usuario para não ser enviada para o front-end
 
-            const token = jwt.sign({user_id: user.id, user_name: user.name}, process.env.TOKEN_KEY, {expiresIn: "2h"}) // gera um token de autenticação com validade de 2h
+            const token = jwt.sign({ user_id: user.id, user_name: user.name }, process.env.TOKEN_KEY, { expiresIn: "2h" }) // gera um token de autenticação com validade de 2h
 
-            return res.json({user: user, token: token})
+            return res.json({ user: user, token: token })
 
-        }else {
+        } else {
 
-            return res.status(400).json({error: 'senha invalida!.'})
+            return res.status(400).json({ error: 'senha invalida!.' })
         }
     }
 

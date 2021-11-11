@@ -2,8 +2,8 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable('users', {
-      id: {
+    return queryInterface.createTable('permissions',{
+      id:{
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -13,27 +13,15 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      password: {
+      description:{
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true
       },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      cpf:{
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      phonenumber:{
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      created_at: {
+      created_at:{
         type: Sequelize.DATE,
         allowNull: false,
       },
-      updated_at: {
+      updated_at:{
         type: Sequelize.DATE,
         allowNull: false
       },
@@ -41,8 +29,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-
-    return queryInterface.dropTable('users');
-
+    return queryInterface.dropTable('permissions')
   }
 };

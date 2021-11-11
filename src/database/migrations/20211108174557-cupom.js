@@ -2,19 +2,19 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable('users', {
+    return queryInterface.createTable('cupom', {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
       },
-      name: {
-        type: Sequelize.STRING,
+      value:{
+        type: Sequelize.DECIMAL(10, 2),
         allowNull: false,
       },
-      password: {
-        type: Sequelize.STRING,
+      tickets: {
+        type: Sequelize.JSON,
         allowNull: false,
       },
       email: {
@@ -25,9 +25,14 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      phonenumber:{
+      name:{
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: false
+      },
+      status: {
+        type: Sequelize.ENUM,
+        values: ['pending', 'confirmed'],
+        defaultValue: 'pending'
       },
       created_at: {
         type: Sequelize.DATE,
@@ -42,7 +47,7 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
 
-    return queryInterface.dropTable('users');
+    return queryInterface.dropTable('cupom');
 
   }
 };

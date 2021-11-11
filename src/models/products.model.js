@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize')
-
-class Produtos extends Model {
+const OrdersProducts = require('../models/orders_products.model')
+class Products extends Model {
     static init(sequelize) {
         super.init({
             name: DataTypes.STRING,
@@ -9,6 +9,11 @@ class Produtos extends Model {
         },{
             sequelize
         })
+        
     }
+    static associate(models){
+        this.belongsToMany(models.Orders, {as: 'orders', foreignKey: 'product_id', through: OrdersProducts})
+    }
+
 }
-module.exports = Produtos;
+module.exports = Products;
